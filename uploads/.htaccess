@@ -1,0 +1,20 @@
+# Protect uploads directory
+
+# Disable PHP execution in uploads folder
+<FilesMatch "\.php$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Only allow specific file types
+<FilesMatch "(?i)\.(jpg|jpeg|png|gif|webp|mp4|webm|mov)$">
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>
+
+# Disable script execution
+Options -ExecCGI
+RemoveHandler .php .php3 .php4 .php5 .phtml .pl .py .cgi
+
+# Prevent directory listing
+Options -Indexes

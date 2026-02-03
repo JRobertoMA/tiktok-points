@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Points - Mapa de Lugares</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <span>📍</span>
+            TikTok Points
+        </div>
+        <div class="header-actions">
+            <div class="user-info" onclick="openProfileModal()" title="Mi perfil">
+                <span id="userName">Usuario</span>
+            </div>
+            <button class="btn-icon toggle-sidebar" onclick="toggleSidebar()">☰</button>
+            <button class="btn-icon" onclick="openCategoriesModal()" title="Categorías">🏷️</button>
+            <button class="btn-icon" onclick="logout()" title="Cerrar sesión">🚪</button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <button class="filter-btn active" data-filter="all">Todos</button>
+                <button class="filter-btn" data-filter="pending">Pendientes</button>
+                <button class="filter-btn" data-filter="visited">Visitados</button>
+            </div>
+            <div class="places-list" id="placesList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Cargando lugares...
+                </div>
+            </div>
+        </aside>
+
+        <!-- Map -->
+        <div id="map">
+            <button class="location-btn" id="locationBtn" onclick="goToMyLocation()" title="Ir a mi ubicación">📍</button>
+        </div>
+    </div>
+
+    <!-- FAB Button -->
+    <button class="fab" onclick="openAddModal()">+</button>
+
+    <!-- Add/Edit Place Modal -->
+    <div class="modal-overlay" id="placeModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitle">Agregar Lugar</h2>
+                <button class="modal-close" onclick="closeModal('placeModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="placeForm">
+                    <input type="hidden" id="placeId">
+
+                    <div class="form-group">
+                        <label>Nombre del lugar *</label>
+                        <input type="text" id="placeName" required placeholder="Ej: Café Bonito">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Link de TikTok</label>
+                        <input type="url" id="placeTiktok" placeholder="https://tiktok.com/...">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Categoría</label>
+                        <select id="placeCategory">
+                            <option value="">Sin categoría</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Dirección (opcional)</label>
+                        <input type="text" id="placeAddress" placeholder="Escribe la dirección manualmente">
+                    </div>
+
+                    <div class="location-picker">
+                        <p>📍 Haz clic en el mapa para seleccionar la ubicación</p>
+                        <div class="coords" id="selectedCoords">Latitud: --, Longitud: --</div>
+                        <div id="miniMap"></div>
+                    </div>
+                    <input type="hidden" id="placeLat">
+                    <input type="hidden" id="placeLng">
+
+                    <div class="form-group">
+                        <label>Calificación inicial</label>
+                        <div class="star-rating">
+                            <input type="radio" name="rating" value="5" id="star5"><label for="star5">★</label>
+                            <input type="radio" name="rating" value="4" id="star4"><label for="star4">★</label>
+                            <input type="radio" name="rating" value="3" id="star3"><label for="star3">★</label>
+                            <input type="radio" name="rating" value="2" id="star2"><label for="star2">★</label>
+                            <input type="radio" name="rating" value="1" id="star1"><label for="star1">★</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Notas</label>
+                        <textarea id="placeNotes" placeholder="Algo que quieras recordar..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-primary" id="submitPlaceBtn">Guardar Lugar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Visit Modal -->
+    <div class="modal-overlay" id="visitModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Marcar como Visitado</h2>
+                <button class="modal-close" onclick="closeModal('visitModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="visitForm">
+                    <input type="hidden" id="visitPlaceId">
+
+                    <div class="form-group">
+                        <label>Fecha y hora de visita</label>
+                        <input type="datetime-local" id="visitDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>¿Qué tal estuvo?</label>
+                        <div class="star-rating">
+                            <input type="radio" name="visitRating" value="5" id="vstar5"><label for="vstar5">★</label>
+                            <input type="radio" name="visitRating" value="4" id="vstar4"><label for="vstar4">★</label>
+                            <input type="radio" name="visitRating" value="3" id="vstar3"><label for="vstar3">★</label>
+                            <input type="radio" name="visitRating" value="2" id="vstar2"><label for="vstar2">★</label>
+                            <input type="radio" name="visitRating" value="1" id="vstar1"><label for="vstar1">★</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Notas de la visita</label>
+                        <textarea id="visitNotes" placeholder="¿Cómo les fue? ¿Lo recomendarían?"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Fotos/Videos del lugar</label>
+                        <div class="upload-zone" onclick="document.getElementById('mediaFiles').click()">
+                            <p>📷 Clic para subir fotos o videos</p>
+                            <input type="file" id="mediaFiles" multiple accept="image/*,video/*" style="display:none">
+                        </div>
+                        <div class="media-gallery" id="uploadPreview"></div>
+                    </div>
+
+                    <button type="submit" class="btn-primary btn-success">✓ Marcar como Visitado</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Place Details Modal -->
+    <div class="modal-overlay" id="detailsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="detailsTitle">Detalles del Lugar</h2>
+                <button class="modal-close" onclick="closeModal('detailsModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="detailsContent">
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Modal -->
+    <div class="modal-overlay" id="categoriesModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Categorías</h2>
+                <button class="modal-close" onclick="closeModal('categoriesModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="categoriesList"></div>
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
+                <h3 style="font-size: 16px; margin-bottom: 15px;">Nueva Categoría</h3>
+                <form id="categoryForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nombre</label>
+                            <input type="text" id="categoryName" required placeholder="Ej: Heladerías">
+                        </div>
+                        <div class="form-group">
+                            <label>Icono</label>
+                            <input type="text" id="categoryIcon" value="📍" maxlength="5">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Color</label>
+                        <input type="color" id="categoryColor" value="#3498db" style="height: 45px;">
+                    </div>
+                    <button type="submit" class="btn-primary">Agregar Categoría</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div class="modal-overlay" id="profileModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Mi Perfil</h2>
+                <button class="modal-close" onclick="closeModal('profileModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="profile-header">
+                    <div class="profile-avatar">👤</div>
+                    <div class="profile-name" id="profileName">Usuario</div>
+                    <div class="profile-email" id="profileEmail">email@example.com</div>
+                </div>
+
+                <form id="profileForm">
+                    <div class="form-group">
+                        <label>Nombre de usuario</label>
+                        <input type="text" id="profileUsername" placeholder="Tu nombre de usuario">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="profileEmailInput" placeholder="tu@email.com">
+                    </div>
+
+                    <button type="submit" class="btn-primary">Guardar Cambios</button>
+                </form>
+
+                <div class="form-section">
+                    <h3>🔒 Cambiar Contraseña</h3>
+                    <form id="passwordForm">
+                        <div class="form-group">
+                            <label>Contraseña actual</label>
+                            <input type="password" id="currentPassword" placeholder="Tu contraseña actual" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Nueva contraseña</label>
+                            <input type="password" id="newPassword" placeholder="Mínimo 6 caracteres" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Confirmar nueva contraseña</label>
+                            <input type="password" id="confirmPassword" placeholder="Repite la nueva contraseña" required>
+                        </div>
+
+                        <button type="submit" class="btn-primary btn-secondary">Cambiar Contraseña</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+        <button class="lightbox-close">&times;</button>
+        <img id="lightboxImg" src="" style="display:none">
+        <video id="lightboxVideo" controls style="display:none"></video>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="assets/js/script.js"></script>
+</body>
+</html>
