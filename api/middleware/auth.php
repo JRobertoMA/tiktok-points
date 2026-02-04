@@ -78,9 +78,15 @@ class JWT {
 }
 
 /**
- * Obtiene el token del header Authorization
+ * Obtiene el token del header Authorization o X-Auth-Token
  */
 function getBearerToken() {
+    // Primero intentar X-Auth-Token (funciona en IONOS/shared hosting)
+    if (isset($_SERVER['HTTP_X_AUTH_TOKEN'])) {
+        return trim($_SERVER['HTTP_X_AUTH_TOKEN']);
+    }
+
+    // Fallback a Authorization header tradicional
     $headers = null;
 
     if (isset($_SERVER['Authorization'])) {

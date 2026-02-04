@@ -79,7 +79,13 @@ O desde phpMyAdmin: Importar → Seleccionar `database.sql`
 
 ### 3. Configurar credenciales
 
-Edita el archivo `config.php` con tus datos:
+Copia el archivo de ejemplo y configúralo:
+
+```bash
+cp config.example.php config.php
+```
+
+Edita `config.php` con tus datos:
 
 ```php
 // Configuración de Base de Datos
@@ -94,6 +100,8 @@ define('JWT_SECRET', 'tu_clave_secreta_muy_larga_y_segura');
 // URL base de tu aplicación
 define('BASE_URL', 'https://tu-dominio.com/tiktok_points');
 ```
+
+> **Nota:** El archivo `config.php` está en `.gitignore` para proteger tus credenciales.
 
 ### 4. Configurar permisos
 
@@ -132,11 +140,18 @@ tiktok_points/
 │   │   └── database.php    # Conexión a la base de datos
 │   └── middleware/
 │       └── auth.php        # Autenticación JWT
+├── assets/
+│   ├── css/
+│   │   └── style.css       # Estilos de la aplicación
+│   └── js/
+│       └── script.js       # Lógica del frontend
 ├── uploads/                # Fotos y videos subidos
 ├── index.html              # Página principal con mapa
 ├── login.html              # Página de login/registro
-├── config.php              # Configuración general
+├── config.example.php      # Plantilla de configuración
+├── config.php              # Configuración (no en git)
 ├── database.sql            # Script de creación de BD
+├── .gitignore              # Archivos ignorados por git
 ├── .htaccess               # Configuración Apache
 └── README.md
 ```

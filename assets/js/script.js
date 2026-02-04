@@ -118,7 +118,7 @@ function goToMyLocation() {
 // API Helper
 async function api(endpoint, options = {}) {
     const headers = {
-        'Authorization': 'Bearer ' + token,
+        'X-Auth-Token': token,
         ...options.headers
     };
 

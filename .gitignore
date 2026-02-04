@@ -1,0 +1,32 @@
+# Configuración de producción (contiene credenciales)
+config.php
+
+# Archivos subidos por usuarios
+uploads/*
+!uploads/.htaccess
+!uploads/.gitkeep
+
+# Logs
+*.log
+error_log
+
+# IDE y editores
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Dependencias (si usas composer en el futuro)
+/vendor/
+composer.lock
+
+# Cache
+.cache/
+*.cache
+
+# Archivos temporales
+*.tmp
+*.temp
