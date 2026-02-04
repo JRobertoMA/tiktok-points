@@ -225,18 +225,17 @@ body {
 }
 
 .location-btn.loading {
-    animation: pulse 1s infinite;
+    animation: blink 0.8s ease-in-out infinite;
+    pointer-events: none;
 }
 
-@keyframes pulse {
-
-    0%,
-    100% {
-        opacity: 1;
+@keyframes blink {
+    0%, 100% {
+        background: white;
     }
-
     50% {
-        opacity: 0.5;
+        background: #3498db;
+        color: white;
     }
 }
 
@@ -773,4 +772,102 @@ body {
     font-size: 16px;
     margin-bottom: 15px;
     color: #333;
+}
+
+/* Notification Popup */
+.notification-popup {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    max-width: 350px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    z-index: 5000;
+    transform: translateX(120%);
+    transition: transform 0.3s ease;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.notification-popup.show {
+    transform: translateX(0);
+}
+
+.notification-popup::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(135deg, #fe2c55 0%, #25f4ee 100%);
+}
+
+.notification-content {
+    display: flex;
+    align-items: flex-start;
+    padding: 15px;
+    padding-left: 20px;
+    gap: 12px;
+}
+
+.notification-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+}
+
+.notification-text {
+    flex: 1;
+}
+
+.notification-text strong {
+    display: block;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.notification-text p {
+    font-size: 15px;
+    color: #333;
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.notification-text small {
+    font-size: 12px;
+    color: #999;
+}
+
+.notification-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #999;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.notification-close:hover {
+    background: #f0f0f0;
+    color: #333;
+}
+
+@media (max-width: 768px) {
+    .notification-popup {
+        top: 70px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
 }

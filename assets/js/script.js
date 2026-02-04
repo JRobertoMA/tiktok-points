@@ -759,7 +759,151 @@ function closeLightbox() {
     lightbox.classList.remove('active');
 }
 
+// =====================
+// Notification System
+// =====================
+
+let notificationsEnabled = false;
+let lastCheckTime = localStorage.getItem('lastCheckTime') || new Date().toISOString().slice(0, 19).replace('T', ' ');
+const CHECK_INTERVAL = 30000; // Verificar cada 30 segundos
+
+// Solicitar permiso de notificaciones
+async function requestNotificationPermission() {
+    if (!('Notification' in window)) {
+        console.log('Este navegador no soporta notificaciones');
+        return false;
+    }
+
+    if (Notification.permission === 'granted') {
+        notificationsEnabled = true;
+        return true;
+    }
+
+    if (Notification.permission !== 'denied') {
+        const permission = await Notification.requestPermission();
+        notificationsEnabled = permission === 'granted';
+        return notificationsEnabled;
+    }
+
+    return false;
+}
+
+// Mostrar notificación del sistema
+function showSystemNotification(title, body, onClick) {
+    if (!notificationsEnabled) return;
+
+    const notification = new Notification(title, {
+        body: body,
+        icon: '📍',
+        badge: '📍',
+        tag: 'new-place',
+        renotify: true
+    });
+
+    notification.onclick = () => {
+        window.focus();
+        if (onClick) onClick();
+        notification.close();
+    };
+
+    // Auto cerrar después de 5 segundos
+    setTimeout(() => notification.close(), 5000);
+}
+
+// Mostrar notificación en la app (toast mejorado)
+function showInAppNotification(place) {
+    // Crear elemento de notificación
+    const notif = document.createElement('div');
+    notif.className = 'notification-popup';
+    notif.innerHTML = `
+        <div class="notification-content">
+            <div class="notification-icon">📍</div>
+            <div class="notification-text">
+                <strong>Nuevo lugar agregado</strong>
+                <p>${place.name}</p>
+                <small>por ${place.created_by_username}</small>
+            </div>
+            <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
+        </div>
+    `;
+
+    notif.onclick = (e) => {
+        if (e.target.className !== 'notification-close') {
+            loadPlaces();
+            notif.remove();
+        }
+    };
+
+    document.body.appendChild(notif);
+
+    // Animar entrada
+    setTimeout(() => notif.classList.add('show'), 10);
+
+    // Auto remover después de 8 segundos
+    setTimeout(() => {
+        notif.classList.remove('show');
+        setTimeout(() => notif.remove(), 300);
+    }, 8000);
+}
+
+// Verificar nuevos lugares
+async function checkForNewPlaces() {
+    try {
+        const res = await api(`/places/check-new.php?since=${encodeURIComponent(lastCheckTime)}&exclude_user=${user.id}`);
+        if (!res) return;
+
+        const data = await res.json();
+
+        if (data.count > 0) {
+            // Actualizar tiempo de última verificación
+            lastCheckTime = data.server_time;
+            localStorage.setItem('lastCheckTime', lastCheckTime);
+
+            // Mostrar notificaciones para cada lugar nuevo
+            data.new_places.forEach(place => {
+                // Notificación del sistema (si está en segundo plano)
+                if (document.hidden && notificationsEnabled) {
+                    showSystemNotification(
+                        'Nuevo lugar en TikTok Points',
+                        `${place.name} agregado por ${place.created_by_username}`,
+                        () => loadPlaces()
+                    );
+                } else {
+                    // Notificación in-app
+                    showInAppNotification(place);
+                }
+            });
+
+            // Recargar lista de lugares
+            loadPlaces();
+        }
+    } catch (e) {
+        console.log('Error checking for new places:', e);
+    }
+}
+
+// Iniciar sistema de notificaciones
+async function initNotifications() {
+    // Solicitar permiso
+    await requestNotificationPermission();
+
+    // Actualizar tiempo inicial
+    lastCheckTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    localStorage.setItem('lastCheckTime', lastCheckTime);
+
+    // Verificar periódicamente
+    setInterval(checkForNewPlaces, CHECK_INTERVAL);
+
+    // También verificar cuando la ventana vuelve a estar activa
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            checkForNewPlaces();
+        }
+    });
+}
+
 // Initialize
 loadCategories();
 loadPlaces();
 initUserLocation();
+initNotifications();
